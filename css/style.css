@@ -1,0 +1,106 @@
+/* Base styles */
+:root{
+  --bg1:#e8f0ff; /* soft blue */
+  --bg2:#f1ecff; /* soft violet */
+  --glass-bg: rgba(255,255,255,0.22);
+  --glass-br: 18px;
+  --glass-blur: 16px;
+  --text:#1f2341;
+  --muted:#6a6f8a;
+  --primary:#6b8cff; /* periwinkle */
+  --primary-strong:#5677ff;
+  --accent:#b28bff; /* soft violet */
+  --white:#ffffff;
+  --shadow: 0 10px 30px rgba(31,35,65,0.12), 0 2px 10px rgba(31,35,65,0.06);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color:var(--text);
+  background: radial-gradient(1100px 800px at 15% 10%, var(--bg1), transparent 70%),
+              radial-gradient(1000px 900px at 90% 20%, var(--bg2), transparent 60%),
+              linear-gradient(180deg, #f9fbff 0%, #f3f4ff 100%);
+  overflow-x:hidden;
+}
+
+/* Ambient floating elements */
+.bg-ambient{position:fixed; inset:0; pointer-events:none; overflow:hidden;}
+.orb{position:absolute; width:340px; height:340px; border-radius:50%; filter: blur(40px); opacity:.45; animation: float 12s ease-in-out infinite;}
+.orb-1{ top:-60px; left:-60px; background: radial-gradient(circle at 30% 30%, #a8c5ff, #e9efff); animation-delay:0s;}
+.orb-2{ bottom:-100px; right:-120px; background: radial-gradient(circle at 60% 40%, #d7c9ff, #f2edff); animation-delay:1.5s;}
+.orb-3{ top:40%; left:70%; width:260px; height:260px; background: radial-gradient(circle at 50% 50%, #c3baff, #edf0ff); animation-delay: .7s;}
+.streak{position:absolute; width:260px; height:2px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.65), rgba(255,255,255,0)); filter: blur(1.2px); opacity:.6; animation: streak 8s linear infinite;}
+.streak-1{ top:20%; left:-20%; transform: translateZ(0);}
+.streak-2{ bottom:18%; left:10%; width:340px;}
+@keyframes float{ 0%,100%{transform: translateY(0) translateX(0)} 50%{transform: translateY(-18px) translateX(10px)} }
+@keyframes streak{ 0%{ transform: translateX(-20vw)} 100%{ transform: translateX(120vw)} }
+
+/* Layout */
+.layout{ display:grid; grid-template-columns: 1.1fr 0.9fr; min-height:100vh; align-items:stretch; gap:32px; padding:48px 56px;}
+.left-panel{ position:relative; display:flex; flex-direction:column; justify-content:space-between; padding:24px; border-radius:28px; background: linear-gradient(160deg, rgba(255,255,255,.36), rgba(255,255,255,.14)); box-shadow: var(--shadow); backdrop-filter: blur(18px); border:1px solid rgba(255,255,255,.25); overflow:hidden;}
+.right-panel{ display:flex; align-items:center; justify-content:center;}
+
+/* Brand */
+.brand{ display:flex; align-items:center; gap:14px; padding:8px 10px;}
+.logo{ width:42px; height:42px; filter: drop-shadow(0 2px 6px rgba(31,35,65,.15));}
+.brand-text h1{ margin:0; font-size:1.2rem; letter-spacing:.2px; font-weight:700}
+.brand-text .tagline{ margin:2px 0 0; color:var(--muted); font-weight:500; letter-spacing:.2px }
+
+/* Lottie container */
+.lottie-wrap{ flex:1; display:flex; align-items:center; justify-content:center; min-height:360px;}
+#lottieContainer{ width:100%; max-width:720px; height:520px; }
+
+/* Card */
+.card{ width:100%; max-width:440px; padding:32px; border-radius:28px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55)); border:1px solid rgba(255,255,255,.5); backdrop-filter: blur(var(--glass-blur)); box-shadow: var(--shadow); transform: translateY(8px);}
+.card h2{ margin:0 0 6px; font-weight:700; letter-spacing:.2px }
+.subtitle{ margin:0 0 22px; color:var(--muted)}
+
+.form{ display:flex; flex-direction:column; gap:16px;}
+.field{ display:flex; flex-direction:column; gap:8px;}
+label{ font-size:.92rem; color:#3d4166;}
+input[type="email"], input[type="password"]{
+  width:100%; padding:14px 14px; border-radius:14px; border:1px solid rgba(31,35,65,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.7));
+  outline:none; color:var(--text); transition: box-shadow .2s ease, border-color .2s ease;
+}
+input:focus{ border-color: rgba(107,140,255,.9); box-shadow: 0 0 0 4px rgba(107,140,255,.15);}
+
+.form-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:4px;}
+.checkbox{ display:flex; align-items:center; gap:10px; color:var(--muted)}
+.link{ color:var(--primary); text-decoration:none; font-weight:600;}
+.link:hover{ text-decoration:underline }
+
+.actions{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:4px;}
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px; border:none; border-radius:14px; cursor:pointer; font-weight:600; transition: transform .04s ease, box-shadow .2s ease, background .2s ease;}
+.btn:active{ transform: translateY(1px) }
+.btn-primary{ color:var(--white); background: linear-gradient(180deg, var(--primary), var(--primary-strong)); box-shadow: 0 8px 18px rgba(107,140,255,.35)}
+.btn-primary:hover{ filter: brightness(1.03) }
+.btn-secondary{ color:#324; background: linear-gradient(180deg, #f5f7ff, #e9ecff); border:1px solid rgba(31,35,65,.12);}
+.btn-google{ grid-column: 1 / -1; background:linear-gradient(180deg, #ffffff, #f5f6ff); border:1px solid rgba(31,35,65,.12)}
+.g-icon{ width:18px; height:18px }
+
+.divider{ position:relative; text-align:center; margin:10px 0 0;}
+.divider::before{ content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:linear-gradient(90deg, rgba(31,35,65,.06), rgba(31,35,65,.18), rgba(31,35,65,.06));}
+.divider span{ position:relative; display:inline-block; padding:4px 10px; background:rgba(255,255,255,.7); border-radius:10px; border:1px solid rgba(31,35,65,.06); font-size:.88rem; color:var(--muted)}
+
+/* Animations */
+.fade-in{ opacity:0; animation: fadeIn .7s ease forwards .25s;}
+.slide-in{ opacity:0; transform: translateX(-16px); animation: slideIn .7s ease forwards .2s;}
+@keyframes fadeIn{ to{ opacity:1; transform:none } }
+@keyframes slideIn{ to{ opacity:1; transform:none } }
+
+/* Responsive */
+@media (max-width: 1024px){
+  .layout{ grid-template-columns: 1fr; padding:28px 20px; gap:20px }
+  .left-panel{ order:2; border-radius:22px }
+  .right-panel{ order:1 }
+  #lottieContainer{ height:360px; max-width:560px }
+}
+@media (max-width: 560px){
+  .card{ padding:22px; border-radius:20px }
+  .brand-text h1{ font-size:1.05rem }
+  .brand{ padding:6px 4px }
+  .actions{ grid-template-columns: 1fr; }
+}

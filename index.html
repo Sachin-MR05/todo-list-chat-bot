@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | LifeTrack AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/login.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+
+  <main class="layout">
+    <section class="left-panel slide-in" id="illustration">
+      <div class="brand">
+        <img src="assets/logo.svg" alt="App Logo" class="logo" />
+        <div class="brand-text">
+          <h1>LifeTrack AI</h1>
+          <p class="tagline">Your Smart Routine Partner.</p>
+        </div>
+      </div>
+      <div class="illustration slide-in"></div>
+    </section>
+
+    <section class="right-panel">
+      <div class="card fade-in" id="loginCard" role="region" aria-label="Login form">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Stay on track with your goals and streaks</p>
+        <form class="form" autocomplete="on">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" required />
+          </div>
+
+          <div class="form-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="remember" name="remember" />
+              <span>Remember me</span>
+            </label>
+            <a class="link" href="forgot-password.html" aria-label="Forgot Password">Forgot Password?</a>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary">Login</button>
+          </div>
+
+          <div class="divider">
+            <span>or</span>
+          </div>
+
+          <button type="button" class="btn-google" aria-label="Continue with Google">
+            <svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" aria-hidden="true">
+              <path fill="#EA4335" d="M533.5 278.4c0-18.6-1.7-37-5-54.8H272v103.8h146.9c-6.3 34.3-25.2 63.3-53.8 82.8v68h86.7c50.8-46.8 80.7-115.8 80.7-199.8z"/>
+              <path fill="#34A853" d="M272 544.3c72.9 0 134.2-24.1 178.9-65.1l-86.7-68c-24.1 16.2-55 25.8-92.2 25.8-70.8 0-130.8-47.8-152.3-112h-90.4v70.3C72.5 487.3 166.6 544.3 272 544.3z"/>
+              <path fill="#4A90E2" d="M119.7 324.9c-9.7-28.9-9.7-60.1 0-89l.1-70.3H29.4c-40.4 79.9-40.4 170.1 0 250l90.3-70.7z"/>
+              <path fill="#FBBC05" d="M272 107.7c39.6-.6 77.7 14 106.8 41.1l79.6-79.6C406.1 20.6 342.2-2 272 .3 166.6.3 72.5 57.2 29.4 153.6l90.3 70.3C141.2 155.8 201.2 107.7 272 107.7z"/>
+            </svg>
+            Continue with Google
+          </button>
+            <p class="signup-line">Don't have an account? <a href="register.html" class="link signup-link">Sign up</a></p>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
