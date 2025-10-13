@@ -7,12 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
   <link rel="stylesheet" href="css/dashboard-new.css" />
   <link rel="stylesheet" href="css/modal.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-  <!-- App Logic -->
   <script src="js/common.js"></script>
   <script type="module" src="js/dashboard-new.js"></script>
 </head>
@@ -31,9 +30,7 @@
   </header>
 
   <aside class="sidebar">
-    <nav class="sidebar-nav">
-        <!-- Links will be dynamically updated based on active state -->
-    </nav>
+    <nav class="sidebar-nav"><!-- Dynamically updated --></nav>
   </aside>
 
   <main class="main-container">
@@ -42,11 +39,11 @@
       <p class="page-subtitle">Organize smarter. Track better. Evolve daily.</p>
     </div>
 
-    <section class="card profile-card">
-      <!-- Profile content will be loaded dynamically -->
+    <section class="card profile-card" id="profile-card-container">
+      <!-- Profile card content will be loaded here -->
     </section>
 
-    <div class="cards-grid" id="analytics-grid">
+    <div class="cards-grid" id="analytics-grid-container">
       <!-- Analytics cards will be loaded here -->
     </div>
 
@@ -55,15 +52,12 @@
       <button id="new-folder-btn" class="btn-secondary">+ New Folder</button>
     </section>
 
-    <div class="cards-grid" id="folders-grid">
+    <div class="cards-grid" id="folders-grid-container">
         <!-- Folder cards will be dynamically inserted here -->
     </div>
 
     <section class="section-header">
-      <h2 class="section-title">Today's Tasks</h2>
-      <div class="filter-tabs">
-        <!-- Filter tabs will be functional for tasks -->
-      </div>
+        <h2 class="section-title">Today's Tasks</h2>
     </section>
 
     <div class="card task-list-card" id="task-list-container">
@@ -80,18 +74,9 @@
       </div>
       <div class="modal-body">
         <form id="new-folder-form">
-          <div class="form-group">
-            <label for="folder-name">Folder Name</label>
-            <input type="text" id="folder-name" required>
-          </div>
-          <div class="form-group">
-            <label for="folder-description">Description</label>
-            <textarea id="folder-description" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="folder-color">Folder Color</label>
-            <input type="color" id="folder-color" value="#FF6B35">
-          </div>
+          <div class="form-group"><label for="folder-name">Folder Name</label><input type="text" id="folder-name" required></div>
+          <div class="form-group"><label for="folder-description">Description</label><textarea id="folder-description" rows="3"></textarea></div>
+          <div class="form-group"><label for="folder-color">Folder Color</label><input type="color" id="folder-color" value="#FF6B35"></div>
           <button type="submit" class="btn-primary">Save Folder</button>
         </form>
       </div>

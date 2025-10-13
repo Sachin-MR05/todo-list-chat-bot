@@ -1,0 +1,51 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": [
+      {
+        "collectionGroup": "tasks",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "recurringSourceId",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "userId",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "dueDate",
+            "order": "ASCENDING"
+          }
+        ]
+      },
+      {
+        "collectionGroup": "tasks",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "completed",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "userId",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "dueDate",
+            "order": "ASCENDING"
+          }
+        ]
+      }
+    ]
+  },
+  "hosting": {
+    "public": "./",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

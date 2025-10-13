@@ -1,365 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Completed Tasks | LifeTrack AI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dashboard-new.css" />
-  <link rel="stylesheet" href="css/completed.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="js/common.js"></script>
-  <script defer src="js/completed.js"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://apis.google.com;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Tasks | LifeTrack AI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/completed.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
 </head>
 <body>
-  <!-- Top Navigation Bar -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <img src="assets/logo.svg" alt="LifeTrack AI" class="logo" />
-      <span class="brand-name">LifeTrack AI</span>
-    </div>
-    <div class="topbar-right">
-      <div class="user-menu">
-        <span class="user-name">Sachin MR</span>
-        <img src="https://i.pravatar.cc/80?img=12" alt="User" class="user-avatar" />
-      </div>
-    </div>
-  </header>
+    <header class="topbar"></header>
+    <aside class="sidebar"></aside>
 
-  <!-- Sidebar Container (embedded to avoid fetch/file:// issues) -->
-  <!-- Common Sidebar Navigation -->
-  <aside class="sidebar">
-    <nav class="sidebar-nav">
-      <a href="dashboard-new.html" class="nav-link" data-page="profile">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span class="nav-text">Profile</span>
-      </a>
-      <a href="folders.html" class="nav-link" data-page="folders">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span class="nav-text">Folders</span>
-      </a>
-      <a href="upcoming.html" class="nav-link" data-page="upcoming">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <span class="nav-text">Upcoming</span>
-        <span class="nav-badge" id="upcomingCount">15</span>
-      </a>
-      <a href="completed.html" class="nav-link" data-page="completed">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-        <span class="nav-text">Completed</span>
-        <span class="nav-badge completed" id="completedCount">127</span>
-      </a>
-      <a href="settings.html" class="nav-link" data-page="settings">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-        <span class="nav-text">Settings</span>
-      </a>
-    </nav>
-  </aside>
-
-  <script>
-    // Set active state based on current page
-    (function() {
-      const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
-      const pageMap = {
-        'dashboard': 'profile',
-        'dashboard-new': 'profile',
-        'folders': 'folders',
-        'folder-detail': 'folders',
-        'upcoming': 'upcoming',
-        'completed': 'completed',
-        'settings': 'settings'
-      };
-      
-      const activePage = pageMap[currentPage] || 'profile';
-      const activeLink = document.querySelector(`.nav-link[data-page="${activePage}"]`);
-      if (activeLink) {
-        activeLink.classList.add('active');
-      }
-    })();
-  </script>
-
-  <!-- Main Content Area -->
-  <main class="main-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Completed Tasks</h1>
-        <p class="page-subtitle">Celebrate progress. Reflect daily. Keep evolving.</p>
-      </div>
-      <div class="header-actions">
-        <select class="sort-dropdown">
-          <option value="date">Group by Date</option>
-          <option value="folder">Group by Folder</option>
-          <option value="week">Group by Week</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-icon" style="background: #E8F5E9;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-        </div>
-        <div class="summary-content">
-          <div class="summary-value" data-target="127">0</div>
-          <div class="summary-label">Total Completed</div>
-        </div>
-      </div>
-
-      <div class="summary-card">
-        <div class="summary-icon" style="background: #FFF3E0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-        </div>
-        <div class="summary-content">
-          <div class="summary-value" data-target="85">0</div>
-          <div class="summary-label">Completion Rate %</div>
-        </div>
-      </div>
-
-      <div class="summary-card">
-        <div class="summary-icon" style="background: #FFE5D9;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <polyline points="2 17 12 22 22 17"></polyline>
-            <polyline points="2 12 12 17 22 12"></polyline>
-          </svg>
-        </div>
-        <div class="summary-content">
-          <div class="summary-value" data-target="47">0</div>
-          <div class="summary-label">Current Streak</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Completed Tasks List -->
-    <div class="tasks-container">
-      <!-- Today Section -->
-      <div class="task-group">
-        <h2 class="group-title">Today</h2>
-        
-        <div class="completed-task-card">
-          <label class="task-checkbox">
-            <input type="checkbox" checked disabled />
-            <span class="checkmark checked"></span>
-          </label>
-          
-          <div class="task-main">
-            <div class="task-header">
-              <h3 class="task-title completed">Morning workout session</h3>
-              <span class="folder-badge" style="background: #FFE5D9; color: #FF6B35;">Morning Routine</span>
-            </div>
-            
-            <div class="task-meta">
-              <div class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Completed at 7:30 AM</span>
-              </div>
-            </div>
-            
-            <div class="completion-bar">
-              <div class="completion-fill"></div>
-            </div>
-          </div>
+    <main class="main-container">
+        <div class="page-header">
+            <h1>Completed Tasks</h1>
+            <p>Celebrate progress. Reflect daily. Keep evolving.</p>
         </div>
 
-        <div class="completed-task-card">
-          <label class="task-checkbox">
-            <input type="checkbox" checked disabled />
-            <span class="checkmark checked"></span>
-          </label>
-          
-          <div class="task-main">
-            <div class="task-header">
-              <h3 class="task-title completed">Take morning medication</h3>
-              <span class="folder-badge" style="background: #E3F2FD; color: #4A90E2;">Tablets</span>
+        <div class="content-layout">
+            <div class="completed-tasks-wrapper">
+                <div class="controls-container">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-group="date">Group by Date</button>
+                        <button class="filter-tab" data-group="folder">Group by Folder</button>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-archived">
+                        <span class="slider"></span>
+                        Show Archived
+                    </label>
+                </div>
+                <div id="completed-tasks-list" class="completed-tasks-list">
+                    <!-- Completed tasks will be dynamically injected here -->
+                    <p class="empty-list-message">No completed tasks yet. Keep up the great work!</p>
+                </div>
             </div>
-            
-            <div class="task-meta">
-              <div class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Completed at 8:00 AM</span>
-              </div>
-            </div>
-            
-            <div class="completion-bar">
-              <div class="completion-fill"></div>
-            </div>
-          </div>
-        </div>
 
-        <div class="completed-task-card">
-          <label class="task-checkbox">
-            <input type="checkbox" checked disabled />
-            <span class="checkmark checked"></span>
-          </label>
-          
-          <div class="task-main">
-            <div class="task-header">
-              <h3 class="task-title completed">Review project milestones</h3>
-              <span class="folder-badge" style="background: #FFE5D9; color: #FF6B35;">Morning Routine</span>
-            </div>
-            
-            <div class="task-meta">
-              <div class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Completed at 11:45 AM</span>
-              </div>
-            </div>
-            
-            <div class="completion-bar">
-              <div class="completion-fill"></div>
-            </div>
-          </div>
+            <aside class="summary-stats-panel">
+                <h3>Your Progress</h3>
+                <div class="stat-card">
+                    <span class="stat-value" id="total-completed">0</span>
+                    <span class="stat-label">Tasks Completed</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="completion-rate">0%</span>
+                    <span class="stat-label">Overall Completion</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="current-streak">0 Days</span>
+                    <span class="stat-label">🔥 Current Streak</span>
+                </div>
+                <div class="mini-chart-container">
+                    <h4>Completed This Week</h4>
+                    <canvas id="completed-chart"></canvas>
+                </div>
+            </aside>
         </div>
-      </div>
+    </main>
 
-      <!-- Yesterday Section -->
-      <div class="task-group">
-        <h2 class="group-title">Yesterday</h2>
-        
-        <div class="completed-task-card">
-          <label class="task-checkbox">
-            <input type="checkbox" checked disabled />
-            <span class="checkmark checked"></span>
-          </label>
-          
-          <div class="task-main">
-            <div class="task-header">
-              <h3 class="task-title completed">Prenatal vitamin intake</h3>
-              <span class="folder-badge" style="background: #F3E5F5; color: #7B68EE;">Pregnancy Check</span>
-            </div>
-            
-            <div class="task-meta">
-              <div class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Completed at 9:00 AM</span>
-              </div>
-            </div>
-            
-            <div class="completion-bar">
-              <div class="completion-fill"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="completed-task-card">
-          <label class="task-checkbox">
-            <input type="checkbox" checked disabled />
-            <span class="checkmark checked"></span>
-          </label>
-          
-          <div class="task-main">
-            <div class="task-header">
-              <h3 class="task-title completed">Evening walk 30 minutes</h3>
-              <span class="folder-badge" style="background: #FFE5D9; color: #FF6B35;">Morning Routine</span>
-            </div>
-            
-            <div class="task-meta">
-              <div class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Completed at 6:30 PM</span>
-              </div>
-            </div>
-            
-            <div class="completion-bar">
-              <div class="completion-fill"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- This Week Section -->
-      <div class="task-group">
-        <h2 class="group-title">This Week</h2>
-        
-        <div class="completed-task-card">
-          <label class="task-checkbox">
-            <input type="checkbox" checked disabled />
-            <span class="checkmark checked"></span>
-          </label>
-          
-          <div class="task-main">
-            <div class="task-header">
-              <h3 class="task-title completed">Weekly health checkup</h3>
-              <span class="folder-badge" style="background: #F3E5F5; color: #7B68EE;">Pregnancy Check</span>
-            </div>
-            
-            <div class="task-meta">
-              <div class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Completed 3 days ago</span>
-              </div>
-            </div>
-            
-            <div class="completion-bar">
-              <div class="completion-fill"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats Panel -->
-    <aside class="stats-panel">
-      <div class="card stats-card">
-        <h3 class="stats-title">Performance</h3>
-        
-        <div class="mini-chart-container">
-          <h4 class="mini-chart-title">Tasks Completed Over Time</h4>
-          <canvas id="completedChart" width="200" height="180"></canvas>
-        </div>
-
-        <div class="achievement-badge">
-          <div class="badge-icon">🏆</div>
-          <div class="badge-content">
-            <div class="badge-title">Achievement Unlocked!</div>
-            <div class="badge-desc">7-Day Streak Master</div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  </main>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

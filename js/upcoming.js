@@ -1,261 +1,271 @@
-// Upcoming Tasks Page - LifeTrack AI
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+import { getFirestore, collection, getDocs, query, where, orderBy, addDoc, serverTimestamp, updateDoc, doc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCZK0bKgBqfVlcMXq3_vo5x42-QQZPqbVo",
+    authDomain: "todo-list-chat-bot.firebaseapp.com",
+    projectId: "todo-list-chat-bot",
+    storageBucket: "todo-list-chat-bot.firebasestorage.app",
+    messagingSenderId: "701330320999",
+    appId: "1:701330320999:web:08d8df41178a1f0ae12ec2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let currentUserId = null;
+let allTasks = [];
+let folderCache = {};
 
 document.addEventListener('DOMContentLoaded', () => {
-  initializeFilters();
-  initializeModal();
-  initializeTaskInteractions();
-  initializeChart();
-  animateTasks();
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            currentUserId = user.uid;
+            loadInitialData();
+            setupEventListeners();
+            initializeModal(currentUserId);
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
 });
 
-// Filter Functionality
-function initializeFilters() {
-  const filterBtns = document.querySelectorAll('.tab-btn');
-  const taskCards = document.querySelectorAll('.task-card');
-  
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Update active state
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      const filter = btn.getAttribute('data-filter');
-      
-      // Filter tasks
-      taskCards.forEach(card => {
-        const dueType = card.getAttribute('data-due');
-        
-        if (filter === 'all') {
-          card.style.display = 'flex';
-        } else if (filter === dueType) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
+async function loadInitialData() {
+    if (!currentUserId) return;
+
+    // Fetch all folders to build a cache for names
+    const folderQuery = query(collection(db, "folders"), where("userId", "==", currentUserId));
+    const folderSnapshot = await getDocs(folderQuery);
+    folderCache = {};
+    folderSnapshot.forEach(doc => {
+        folderCache[doc.id] = doc.data().name;
     });
-  });
+
+    // Fetch all non-completed tasks
+    const tasksQuery = query(
+        collection(db, "tasks"),
+        where("userId", "==", currentUserId),
+        where("completed", "==", false),
+        orderBy("dueDate", "asc")
+    );
+    const tasksSnapshot = await getDocs(tasksQuery);
+    allTasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    renderTasks(allTasks);
+    updateAnalytics(allTasks);
 }
 
-// Modal Functionality
-function initializeModal() {
-  const modal = document.getElementById('taskModal');
-  const addBtn = document.getElementById('addTaskBtn');
-  const closeBtn = document.getElementById('closeModal');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const form = document.getElementById('taskForm');
+function renderTasks(tasks) {
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = '';
 
-  const openModal = () => {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-    form.reset();
-  };
-
-  addBtn.addEventListener('click', openModal);
-  closeBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) {
-      closeModal();
+    if (tasks.length === 0) {
+        taskList.innerHTML = '<p class="empty-list-message">No upcoming tasks found.</p>';
+        return;
     }
-  });
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const taskName = document.getElementById('taskName').value;
-    const taskFolder = document.getElementById('taskFolder').value;
-    const taskDate = document.getElementById('taskDate').value;
-    const taskRepeat = document.getElementById('taskRepeat').checked;
-    
-    console.log('Creating task:', { taskName, taskFolder, taskDate, taskRepeat });
-    
-    closeModal();
-    showSuccessNotification('Task added successfully!');
-  });
-}
-
-// Success Notification
-function showSuccessNotification(message) {
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 100px;
-    right: 32px;
-    background: #4CAF50;
-    color: white;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 2000;
-    font-weight: 500;
-  `;
-  notification.textContent = message;
-  document.body.appendChild(notification);
-
-  if (window.gsap) {
-    gsap.from(notification, { x: 100, opacity: 0, duration: 0.3 });
-    gsap.to(notification, {
-      x: 100,
-      opacity: 0,
-      duration: 0.3,
-      delay: 3,
-      onComplete: () => notification.remove()
+    tasks.forEach((task, index) => {
+        const card = createTaskCard(task);
+        taskList.appendChild(card);
+        // GSAP Animation
+        gsap.fromTo(card, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, delay: index * 0.05 });
     });
-  } else {
-    setTimeout(() => notification.remove(), 3000);
-  }
 }
 
-// Task Interactions
-function initializeTaskInteractions() {
-  const checkboxes = document.querySelectorAll('.task-card .task-checkbox input');
-  
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', (e) => {
-      const taskCard = e.target.closest('.task-card');
-      const taskTitle = taskCard.querySelector('.task-title');
-      
-      if (e.target.checked) {
-        taskTitle.classList.add('completed');
-        
-        if (window.gsap) {
-          gsap.to(taskCard, {
-            x: 100,
-            opacity: 0,
-            duration: 0.5,
-            onComplete: () => {
-              taskCard.remove();
-              showSuccessNotification('Task completed! 🎉');
-            }
-          });
+function createTaskCard(task) {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.taskId = task.id;
+
+    const folderName = folderCache[task.folderId] || 'Unassigned';
+    const dueDate = task.dueDate ? task.dueDate.toDate() : null;
+    const isRepeating = task.isRecurring;
+
+    // Time remaining logic
+    let timeRemainingLabel = '';
+    let progressBarWidth = '0%';
+    let progressBarColor = '#4CAF50'; // Green
+
+    if (dueDate) {
+        const now = new Date();
+        const totalDuration = dueDate.getTime() - (task.createdAt ? task.createdAt.toDate().getTime() : now.getTime());
+        const elapsed = now.getTime() - (task.createdAt ? task.createdAt.toDate().getTime() : now.getTime());
+        const progress = Math.min(100, (elapsed / totalDuration) * 100);
+
+        progressBarWidth = `${progress}%`;
+
+        const diffDays = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+        if (diffDays < 1) {
+            progressBarColor = '#FF6B35'; // Red
+            timeRemainingLabel = 'Due today';
+        } else if (diffDays <= 7) {
+            progressBarColor = '#FF9800'; // Orange
+            timeRemainingLabel = `${diffDays} days left`;
         } else {
-          setTimeout(() => {
-            taskCard.remove();
-            showSuccessNotification('Task completed! 🎉');
-          }, 300);
+            timeRemainingLabel = new Intl.DateTimeFormat().format(dueDate);
         }
-      }
-    });
-  });
-
-  // Animate time bars
-  const timeFills = document.querySelectorAll('.time-fill');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const width = entry.target.style.width;
-        entry.target.style.width = '0%';
-        setTimeout(() => {
-          entry.target.style.width = width;
-        }, 100);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.5 });
-
-  timeFills.forEach(fill => observer.observe(fill));
-}
-
-// Initialize Chart
-function initializeChart() {
-  const ctx = document.getElementById('upcomingChart');
-  if (!ctx || !window.Chart) return;
-
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [{
-        label: 'Tasks Due',
-        data: [3, 5, 2, 4, 6, 3, 2],
-        borderColor: '#4A90E2',
-        backgroundColor: 'rgba(74, 144, 226, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#4A90E2'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          titleColor: '#2c3e50',
-          bodyColor: '#6c757d',
-          borderColor: '#e9ecef',
-          borderWidth: 1,
-          padding: 10
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 2,
-            font: { size: 11 },
-            color: '#6c757d'
-          },
-          grid: {
-            color: '#f5f6f7'
-          }
-        },
-        x: {
-          ticks: {
-            font: { size: 11 },
-            color: '#6c757d'
-          },
-          grid: {
-            display: false
-          }
-        }
-      }
     }
-  });
+
+    card.innerHTML = `
+        <label class="task-checkbox">
+            <input type="checkbox">
+            <span class="checkmark"></span>
+        </label>
+        <div class="task-main">
+            <div class="task-title">${task.title}</div>
+            <div class="task-meta">
+                <span class="folder-tag">${folderName}</span>
+                <div class="due-date-bar">
+                    <div class="due-date-fill" style="width: ${progressBarWidth}; background-color: ${progressBarColor};"></div>
+                </div>
+            </div>
+        </div>
+        <div class="task-icons">
+            ${dueDate ? `<span>⏰ ${timeRemainingLabel}</span>` : ''}
+            ${isRepeating ? '<svg viewBox="0 0 24 24"><use href="assets/icons.svg#repeat"></use></svg>' : ''}
+        </div>
+    `;
+
+    card.querySelector('.task-checkbox input').addEventListener('change', async (e) => {
+        await completeTask(task.id, e.target.checked);
+        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(-30px)';
+        setTimeout(() => card.remove(), 300);
+    });
+
+    return card;
 }
 
-// GSAP Animations
-function animateTasks() {
-  if (!window.gsap) return;
+async function completeTask(taskId, isCompleted) {
+    const taskRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskRef, { completed: isCompleted });
+    // Optionally, re-load or just update analytics
+    const completedTaskIndex = allTasks.findIndex(t => t.id === taskId);
+    if (completedTaskIndex > -1) {
+        allTasks.splice(completedTaskIndex, 1);
+        updateAnalytics(allTasks);
+    }
+}
 
-  const cards = document.querySelectorAll('.task-card');
-  
-  gsap.from(cards, {
-    y: 30,
-    opacity: 0,
-    duration: 0.5,
-    stagger: 0.1,
-    ease: 'power2.out'
-  });
+function setupEventListeners() {
+    const filterTabs = document.querySelector('.filter-tabs');
+    filterTabs.addEventListener('click', e => {
+        if (e.target.classList.contains('filter-tab')) {
+            document.querySelector('.filter-tab.active').classList.remove('active');
+            e.target.classList.add('active');
+            applyFilters(e.target.dataset.filter);
+        }
+    });
 
-  gsap.from('.stats-panel', {
-    x: 50,
-    opacity: 0,
-    duration: 0.8,
-    delay: 0.3,
-    ease: 'power2.out'
-  });
+    const sortDropdown = document.getElementById('sort-tasks');
+    sortDropdown.addEventListener('change', () => {
+        applyFilters(document.querySelector('.filter-tab.active').dataset.filter);
+    });
+}
 
-  gsap.from('.fab', {
-    scale: 0,
-    opacity: 0,
-    duration: 0.5,
-    delay: 0.6,
-    ease: 'back.out(1.7)'
-  });
+function applyFilters(filter) {
+    let filteredTasks = [...allTasks];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+
+    if (filter === 'today') {
+        filteredTasks = allTasks.filter(t => t.dueDate && t.dueDate.toDate().toDateString() === today.toDateString());
+    } else if (filter === 'week') {
+        filteredTasks = allTasks.filter(t => t.dueDate && t.dueDate.toDate() >= today && t.dueDate.toDate() <= endOfWeek);
+    } else if (filter === 'overdue') {
+        filteredTasks = allTasks.filter(t => t.dueDate && t.dueDate.toDate() < today);
+    }
+
+    const sortBy = document.getElementById('sort-tasks').value;
+    if (sortBy === 'folder') {
+        filteredTasks.sort((a, b) => (folderCache[a.folderId] || '').localeCompare(folderCache[b.folderId] || ''));
+    } else if (sortBy === 'priority') {
+        // Assuming a priority field exists
+        filteredTasks.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    } else {
+        // Default sort by date
+        filteredTasks.sort((a, b) => (a.dueDate ? a.dueDate.toMillis() : Infinity) - (b.dueDate ? b.dueDate.toMillis() : Infinity));
+    }
+
+    renderTasks(filteredTasks);
+}
+
+function updateAnalytics(tasks) {
+    document.getElementById('total-upcoming').textContent = tasks.length;
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dueTodayCount = tasks.filter(t => t.dueDate && t.dueDate.toDate().toDateString() === todayStart.toDateString()).length;
+    document.getElementById('due-today').textContent = dueTodayCount;
+
+    // Chart.js - 7 Day Forecast
+    const sevenDayLabels = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        return d.toLocaleDateString('en-US', { weekday: 'short' });
+    });
+    const sevenDayData = sevenDayLabels.map((label, i) => {
+        const day = new Date(now);
+        day.setDate(now.getDate() + i);
+        return tasks.filter(t => t.dueDate && t.dueDate.toDate().toDateString() === day.toDateString()).length;
+    });
+
+    const ctx = document.getElementById('seven-day-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: { labels: sevenDayLabels, datasets: [{ data: sevenDayData, borderColor: '#4A90E2', tension: 0.3, fill: false }] },
+        options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+    });
+}
+
+function initializeModal(userId) {
+    const modal = document.getElementById('add-task-modal');
+    const openBtn = document.getElementById('quick-add-task-btn');
+    const cancelBtn = document.getElementById('cancel-modal');
+    const form = document.getElementById('add-task-form');
+    const folderSelect = document.getElementById('folder-selection');
+
+    openBtn.addEventListener('click', () => {
+        gsap.to(modal, { autoAlpha: 1, duration: 0.3 });
+        // Populate folders
+        folderSelect.innerHTML = '<option value="">Select Folder</option>';
+        for (const [id, name] of Object.entries(folderCache)) {
+            folderSelect.innerHTML += `<option value="${id}">${name}</option>`;
+        }
+    });
+
+    const closeModal = () => {
+        gsap.to(modal, { autoAlpha: 0, duration: 0.3 });
+        form.reset();
+    };
+
+    cancelBtn.addEventListener('click', closeModal);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('task-name').value;
+        const folderId = folderSelect.value;
+
+        if (!title || !folderId) {
+            alert('Please provide a task name and select a folder.');
+            return;
+        }
+
+        await addDoc(collection(db, 'tasks'), {
+            userId: userId,
+            folderId: folderId,
+            title: title,
+            completed: false,
+            dueDate: null, // Simplified for this example
+            createdAt: serverTimestamp()
+        });
+
+        closeModal();
+        loadInitialData(); // Refresh data
+    });
 }
