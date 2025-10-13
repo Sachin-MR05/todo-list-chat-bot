@@ -1,0 +1,5 @@
+{
+  "command": "python3.11 -m http.server 8080",
+  "port": 8080,
+  "startOnBoot": true
+}

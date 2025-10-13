@@ -1,10 +1,24 @@
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCZK0bKgBqfVlcMXq3_vo5x42-QQZPqbVo",
+  authDomain: "todo-list-chat-bot.firebaseapp.com",
+  projectId: "todo-list-chat-bot",
+  storageBucket: "todo-list-chat-bot.firebasestorage.app",
+  messagingSenderId: "701330320999",
+  appId: "1:701330320999:web:08d8df41178a1f0ae12ec2",
+  measurementId: "G-JDJWS4QY69"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 document.addEventListener('DOMContentLoaded', () => {
-  // GSAP Animations
   if (window.gsap) {
     gsap.from('.left-panel', { x: -50, opacity: 0, duration: 0.8, ease: 'power2.out' });
     gsap.from('.card', { y: 30, opacity: 0, duration: 0.6, delay: 0.2, ease: 'power2.out' });
-    
-    // Stagger form elements
     gsap.from('.form-group, .form-row, .actions button, .divider, .btn-google', {
       y: 10,
       opacity: 0,
@@ -15,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Form Submit Handler
   const form = document.getElementById('registerForm');
   if (form) {
     form.addEventListener('submit', (e) => {
@@ -36,18 +49,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      console.log('Registration attempt:', { name, email, password });
-      // Simulate success and redirect
-      window.location.href = 'dashboard-new.html';
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Store new user info in session storage to pass to the dashboard
+          sessionStorage.setItem('newUserName', name);
+          
+          console.log('Registration successful:', user);
+          window.location.href = 'dashboard-new.html';
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.error('Registration failed:', errorCode, errorMessage);
+          alert(`Registration failed: ${errorMessage}`);
+        });
     });
-
-    // Google button handler (simulate)
-    const googleBtn = document.querySelector('.btn-google');
-    if (googleBtn) {
-      googleBtn.addEventListener('click', () => {
-        console.log('Google registration clicked');
-        window.location.href = 'dashboard-new.html';
-      });
-    }
   }
 });
