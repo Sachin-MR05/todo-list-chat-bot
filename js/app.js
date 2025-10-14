@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 // --- 1. Firebase Configuration ---
 const firebaseConfig = {
@@ -25,7 +25,7 @@ async function loadCommonUI() {
             fetch('topbar.html').then(res => res.text()),
             fetch('sidebar.html').then(res => res.text())
         ]);
-        
+
         document.querySelector('.topbar').innerHTML = topbar;
         document.querySelector('.sidebar').innerHTML = sidebar;
 
@@ -36,6 +36,40 @@ async function loadCommonUI() {
         }
     } catch (error) {
         console.error("Error loading common UI fragments: ", error);
+    }
+}
+
+// --- Login Functions ---
+function handleLogin() {
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = 'dashboard-new.html';
+            } catch (error) {
+                console.error('Login failed:', error);
+                alert(`Login failed: ${error.message}`);
+            }
+        });
+    }
+
+    const googleSignin = document.getElementById('google-signin');
+    if (googleSignin) {
+        googleSignin.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                window.location.href = 'dashboard-new.html';
+            } catch (error) {
+                console.error('Google sign-in failed:', error);
+                alert(`Google sign-in failed: ${error.message}`);
+            }
+        });
     }
 }
 
@@ -87,6 +121,11 @@ document.addEventListener('DOMContentLoaded', main);
 async function main() {
     await loadCommonUI();
 
+    // Initialize login handlers if on login page
+    if (window.location.pathname.includes('index.html')) {
+        handleLogin();
+    }
+
     onAuthStateChanged(auth, user => {
         if (user) {
             currentUserId = user.uid;
@@ -95,8 +134,10 @@ async function main() {
             loadInitialData();
             setupEventListeners();
         } else {
-            console.log("No user authenticated, redirecting to index.html");
-            window.location.href = 'index.html';
+            console.log("No user authenticated");
+            if (window.location.pathname !== '/index.html') {
+                window.location.href = 'index.html';
+            }
         }
     });
 }

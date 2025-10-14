@@ -181,7 +181,7 @@ function openFolderModal(folder = null) {
         modalTitle.textContent = 'Create New Folder';
         currentEditingFolderId = null;
     }
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 }
 
 function initializeFolderModal(userId) {
@@ -191,7 +191,7 @@ function initializeFolderModal(userId) {
     const cancelBtn = document.getElementById('cancelBtn');
 
     const closeModal = () => {
-        modal.style.display = 'none';
+        modal.classList.remove('active');
         form.reset();
     };
 
