@@ -126,27 +126,44 @@ let folderCache = {};
 document.addEventListener('DOMContentLoaded', main);
 
 async function main() {
-    await loadCommonUI();
+    const isLoginPage = !!document.getElementById('login-form');
+    const isProtectedPage = !isLoginPage;
 
-    // Initialize login handlers if on login page
-    if (window.location.pathname.includes('index.html')) {
-        handleLogin();
-    }
-
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
-            currentUserId = user.uid;
-            updateUserInfo(user);
-            initializeAuthActions(auth);
-            loadInitialData();
-            setupEventListeners();
+            // User is logged in
+            if (isLoginPage) {
+                // If a logged-in user is on the login page, redirect to the dashboard
+                window.location.href = 'dashboard-new.html';
+            } else {
+                // User is on a protected page, proceed with loading data
+                currentUserId = user.uid;
+                await loadCommonUI(); // Load UI elements needed for authenticated pages
+                updateUserInfo(user);
+                initializeAuthActions(auth);
+
+                // Page-specific data loading
+                if (window.location.pathname.includes('completed.html')) {
+                    loadInitialData();
+                    setupEventListeners();
+                }
+            }
         } else {
-            console.log("No user authenticated");
-            if (window.location.pathname !== '/index.html') {
+            // No user is logged in
+            if (isProtectedPage) {
+                // If a logged-out user tries to access a protected page, redirect to login
                 window.location.href = 'index.html';
+            } else {
+                // User is on the login page, initialize login handlers
+                handleLogin();
             }
         }
     });
+
+    // For pages that don't require auth but need common UI
+    if (!isProtectedPage) {
+         // No common UI needed on login page based on its structure
+    }
 }
 
 // Data Fetching and Rendering
