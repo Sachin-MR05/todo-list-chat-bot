@@ -1,6 +1,6 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, writeBatch, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 // Initialize Firebase
@@ -17,6 +17,13 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 let tasksChart = null;
 let currentUserId = null;
+
+// Helper function to get user data
+const getUserData = async (userId) => {
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+    return userDocSnap.exists() ? userDocSnap.data() : null;
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, user => {
@@ -36,7 +43,8 @@ async function loadPageData(userId) {
     foldersGrid.innerHTML = '<p>Loading folders...</p>';
 
     try {
-        const [foldersSnapshot, tasksSnapshot] = await Promise.all([
+        const [userData, foldersSnapshot, tasksSnapshot] = await Promise.all([
+            getUserData(userId),
             getDocs(query(collection(db, "folders"), where("userId", "==", userId))),
             getDocs(query(collection(db, "tasks"), where("userId", "==", userId)))
         ]);
@@ -50,6 +58,8 @@ async function loadPageData(userId) {
             return { ...folderData, taskCount: folderTasks.length, completedCount: completedTasks, progress };
         });
 
+        if (userData) renderHeader(userData);
+        renderSidebar(tasks);
         renderFolders(folders, userId);
         updateStatsPanel(folders, tasks);
         updateDoughnutChart(folders);
@@ -58,6 +68,49 @@ async function loadPageData(userId) {
         console.error("Error loading page data: ", error);
         foldersGrid.innerHTML = '<p class="error">Could not load folders.</p>';
     }
+}
+
+function renderHeader(user) {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+    topbar.innerHTML = `
+        <div class="topbar-left"><img src="assets/logo.svg" alt="LifeTrack AI" class="logo"> <span>LifeTrack AI</span></div>
+        <div class="topbar-right">
+            <div class="user-menu"><span class="user-name">${user.name || 'User'}</span> <img src="${user.avatar || 'https://i.pravatar.cc/120'}" alt="${user.name || 'User'}" class="user-avatar"></div>
+            <button class="btn-logout" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    `;
+    
+    // Add logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        });
+    }
+}
+
+function renderSidebar(tasks) {
+    const upcomingCount = tasks.filter(t => !t.completed).length;
+    const completedCount = tasks.filter(t => t.completed).length;
+    const navContainer = document.querySelector('.sidebar-nav');
+    if (!navContainer) return;
+    navContainer.innerHTML = `
+        <a href="dashboard-new.html" class="nav-link"><i class="fas fa-user-circle"></i> Profile</a>
+        <a href="folders.html" class="nav-link active"><i class="fas fa-folder"></i> Folders</a>
+        <a href="upcoming.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Upcoming <span class="count">${upcomingCount}</span></a>
+        <a href="completed.html" class="nav-link"><i class="fas fa-check-circle"></i> Completed <span class="count">${completedCount}</span></a>
+        <a href="settings.html" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+    `;
 }
 
 function renderFolders(folders, userId) {

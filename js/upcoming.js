@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-import { getFirestore, collection, getDocs, query, where, orderBy, addDoc, serverTimestamp, updateDoc, doc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, where, orderBy, addDoc, serverTimestamp, updateDoc, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
 
 const firebaseConfig = {
@@ -19,6 +19,13 @@ let currentUserId = null;
 let allTasks = [];
 let folderCache = {};
 
+// Helper function to get user data
+const getUserData = async (userId) => {
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+    return userDocSnap.exists() ? userDocSnap.data() : null;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, user => {
         if (user) {
@@ -35,26 +42,68 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadInitialData() {
     if (!currentUserId) return;
 
-    // Fetch all folders to build a cache for names
-    const folderQuery = query(collection(db, "folders"), where("userId", "==", currentUserId));
-    const folderSnapshot = await getDocs(folderQuery);
+    const [userData, folderSnapshot, tasksSnapshot, allTasksSnapshot] = await Promise.all([
+        getUserData(currentUserId),
+        getDocs(query(collection(db, "folders"), where("userId", "==", currentUserId))),
+        getDocs(query(collection(db, "tasks"), where("userId", "==", currentUserId), where("completed", "==", false), orderBy("dueDate", "asc"))),
+        getDocs(query(collection(db, "tasks"), where("userId", "==", currentUserId)))
+    ]);
+
     folderCache = {};
     folderSnapshot.forEach(doc => {
         folderCache[doc.id] = doc.data().name;
     });
 
-    // Fetch all non-completed tasks
-    const tasksQuery = query(
-        collection(db, "tasks"),
-        where("userId", "==", currentUserId),
-        where("completed", "==", false),
-        orderBy("dueDate", "asc")
-    );
-    const tasksSnapshot = await getDocs(tasksQuery);
     allTasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const allTasksForSidebar = allTasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+    if (userData) renderHeader(userData);
+    renderSidebar(allTasksForSidebar);
     renderTasks(allTasks);
     updateAnalytics(allTasks);
+}
+
+function renderHeader(user) {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+    topbar.innerHTML = `
+        <div class="topbar-left"><img src="assets/logo.svg" alt="LifeTrack AI" class="logo"> <span>LifeTrack AI</span></div>
+        <div class="topbar-right">
+            <div class="user-menu"><span class="user-name">${user.name || 'User'}</span> <img src="${user.avatar || 'https://i.pravatar.cc/120'}" alt="${user.name || 'User'}" class="user-avatar"></div>
+            <button class="btn-logout" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    `;
+    
+    // Add logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        });
+    }
+}
+
+function renderSidebar(tasks) {
+    const upcomingCount = tasks.filter(t => !t.completed).length;
+    const completedCount = tasks.filter(t => t.completed).length;
+    const navContainer = document.querySelector('.sidebar-nav');
+    if (!navContainer) return;
+    navContainer.innerHTML = `
+        <a href="dashboard-new.html" class="nav-link"><i class="fas fa-user-circle"></i> Profile</a>
+        <a href="folders.html" class="nav-link"><i class="fas fa-folder"></i> Folders</a>
+        <a href="upcoming.html" class="nav-link active"><i class="fas fa-calendar-alt"></i> Upcoming <span class="count">${upcomingCount}</span></a>
+        <a href="completed.html" class="nav-link"><i class="fas fa-check-circle"></i> Completed <span class="count">${completedCount}</span></a>
+        <a href="settings.html" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+    `;
 }
 
 function renderTasks(tasks) {

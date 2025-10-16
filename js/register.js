@@ -1,6 +1,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCZK0bKgBqfVlcMXq3_vo5x42-QQZPqbVo",
@@ -14,18 +15,33 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.gsap) {
-    gsap.from('.left-panel', { x: -50, opacity: 0, duration: 0.8, ease: 'power2.out' });
-    gsap.from('.card', { y: 30, opacity: 0, duration: 0.6, delay: 0.2, ease: 'power2.out' });
-    gsap.from('.form-group, .form-row, .actions button, .divider, .btn-google', {
+    gsap.from('.left-panel', { 
+      x: -50, 
+      opacity: 0, 
+      duration: 0.8, 
+      ease: 'power2.out',
+      clearProps: 'all'
+    });
+    gsap.from('.card', { 
+      y: 30, 
+      opacity: 0, 
+      duration: 0.6, 
+      delay: 0.2, 
+      ease: 'power2.out',
+      clearProps: 'all'
+    });
+    gsap.from('.form-group, .form-row, .actions, .divider, .btn-google', {
       y: 10,
       opacity: 0,
       duration: 0.4,
       stagger: 0.1,
       delay: 0.4,
-      ease: 'power2.out'
+      ease: 'power2.out',
+      clearProps: 'all'
     });
   }
 
@@ -50,11 +66,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
+        .then(async (userCredential) => {
           const user = userCredential.user;
+          // Save user data to Firestore
+          await setDoc(doc(db, 'users', user.uid), {
+            name: name,
+            email: email,
+            bio: "Welcome to LifeTrack AI! Start building your productivity habits.",
+            avatar: `https://i.pravatar.cc/120?u=${user.uid}`,
+            currentStreak: 0,
+            highestStreak: 0,
+          });
           // Store new user info in session storage to pass to the dashboard
           sessionStorage.setItem('newUserName', name);
-          
+
           console.log('Registration successful:', user);
           window.location.href = 'dashboard-new.html';
         })

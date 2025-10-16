@@ -57,33 +57,16 @@ const calculateAvgCompletion = (tasks) => {
 
 const seedInitialData = async (userId, userName) => {
     const userDocRef = doc(db, 'users', userId);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists()) return;
 
     const batch = writeBatch(db);
     batch.set(userDocRef, {
-        name: userName || "Sachin MR",
-        bio: "Productivity enthusiast · AI-powered goal achiever",
+        name: userName || "New User",
+        bio: "Welcome to LifeTrack AI! Start building your productivity habits.",
         avatar: `https://i.pravatar.cc/120?u=${userId}`,
-        currentStreak: 47,
-        highestStreak: 89,
+        currentStreak: 0,
+        highestStreak: 0,
+        email: "", // Placeholder, will be updated if needed
     });
-
-    const folders = [
-        { name: 'Morning Routine', description: 'Daily tasks to start the day right', color: '#FF9500', progress: 75, userId },
-        { name: 'Tablets', description: 'Medication schedule and reminders', color: '#007AFF', progress: 60, userId },
-        { name: 'Pregnancy Check', description: 'Health tracking and appointments', color: '#AF52DE', progress: 90, userId },
-    ];
-
-    const folderRefs = folders.map(() => doc(collection(db, "folders")));
-    folders.forEach((folder, i) => batch.set(folderRefs[i], folder));
-
-    // Seed some task data for the chart
-    for (let i = 0; i < 7; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        batch.set(doc(collection(db, "tasks")), { title: `Task from day ${i}`, completed: Math.random() > 0.3, userId, timestamp: d });
-    }
 
     await batch.commit();
 };
@@ -91,11 +74,18 @@ const seedInitialData = async (userId, userName) => {
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            const newUserName = sessionStorage.getItem('newUserName');
-            if (newUserName) {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (!userDocSnap.exists()) {
+                // User exists in Auth, but not in Firestore. Create their document.
+                const newUserName = sessionStorage.getItem('newUserName') || user.displayName;
                 await seedInitialData(user.uid, newUserName);
-                sessionStorage.removeItem('newUserName');
+                if (sessionStorage.getItem('newUserName')) {
+                    sessionStorage.removeItem('newUserName');
+                }
             }
+            
             renderDashboard(user.uid);
         } else { window.location.href = 'index.html'; }
     });
@@ -116,8 +106,28 @@ function renderHeader(user) {
     const topbar = document.querySelector('.topbar');
     topbar.innerHTML = `
         <div class="topbar-left"><img src="assets/logo.svg" alt="LifeTrack AI" class="logo"> <span>LifeTrack AI</span></div>
-        <div class="user-menu"><span class="user-name">${user.name}</span> <img src="${user.avatar}" alt="${user.name}" class="user-avatar"></div>
+        <div class="topbar-right">
+            <div class="user-menu"><span class="user-name">${user.name}</span> <img src="${user.avatar}" alt="${user.name}" class="user-avatar"></div>
+            <button class="btn-logout" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
     `;
+    
+    // Add logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        });
+    }
 }
 
 function renderSidebar(tasks, folders) {

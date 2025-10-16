@@ -20,6 +20,13 @@ let currentFolderId = null;
 let currentUserId = null;
 let completionChart = null;
 
+// Helper function to get user data
+const getUserData = async (userId) => {
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+    return userDocSnap.exists() ? userDocSnap.data() : null;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     currentFolderId = urlParams.get('id');
@@ -108,15 +115,22 @@ async function loadAllData(userId, folderId) {
         // Generate any recurring tasks that are due today before loading all tasks
         await generateRecurringTasks(userId, folderId);
 
-        const folderDocRef = doc(db, "folders", folderId);
-        const folderSnap = await getDoc(folderDocRef);
+        const [userData, folderSnap, tasksSnapshot, allTasksSnapshot] = await Promise.all([
+            getUserData(userId),
+            getDoc(doc(db, "folders", folderId)),
+            getDocs(query(collection(db, "tasks"), where("folderId", "==", folderId), where("userId", "==", userId))),
+            getDocs(query(collection(db, "tasks"), where("userId", "==", userId)))
+        ]);
+
         if (!folderSnap.exists() || folderSnap.data().userId !== userId) {
             document.body.innerHTML = '<h1>Folder not found or access denied.</h1>'; return;
         }
         const folder = { id: folderSnap.id, ...folderSnap.data() };
-        const tasksQuery = query(collection(db, "tasks"), where("folderId", "==", folderId), where("userId", "==", userId));
-        const tasksSnapshot = await getDocs(tasksQuery);
         const tasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const allTasks = allTasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (userData) renderHeader(userData);
+        renderSidebar(allTasks);
         renderFolderHeader(folder);
         renderTaskLists(tasks);
         renderSummaryPanel(folder, tasks);
@@ -283,6 +297,49 @@ function initializeDeleteFolderButton(userId, folderId) {
             window.location.href = 'folders.html';
         });
     }
+}
+
+function renderHeader(user) {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+    topbar.innerHTML = `
+        <div class="topbar-left"><img src="assets/logo.svg" alt="LifeTrack AI" class="logo"> <span>LifeTrack AI</span></div>
+        <div class="topbar-right">
+            <div class="user-menu"><span class="user-name">${user.name || 'User'}</span> <img src="${user.avatar || 'https://i.pravatar.cc/120'}" alt="${user.name || 'User'}" class="user-avatar"></div>
+            <button class="btn-logout" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    `;
+    
+    // Add logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        });
+    }
+}
+
+function renderSidebar(tasks) {
+    const upcomingCount = tasks.filter(t => !t.completed).length;
+    const completedCount = tasks.filter(t => t.completed).length;
+    const navContainer = document.querySelector('.sidebar-nav');
+    if (!navContainer) return;
+    navContainer.innerHTML = `
+        <a href="dashboard-new.html" class="nav-link"><i class="fas fa-user-circle"></i> Profile</a>
+        <a href="folders.html" class="nav-link"><i class="fas fa-folder"></i> Folders</a>
+        <a href="upcoming.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Upcoming <span class="count">${upcomingCount}</span></a>
+        <a href="completed.html" class="nav-link"><i class="fas fa-check-circle"></i> Completed <span class="count">${completedCount}</span></a>
+        <a href="settings.html" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+    `;
 }
 
 function renderFolderHeader(folder) {
