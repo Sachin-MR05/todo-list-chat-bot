@@ -1,16 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { firebaseConfig } from './firebase-config.js';
+import { initializeChatbot } from './chatbot.js';
 
 // --- 1. Firebase Configuration ---
-const firebaseConfig = {
-    apiKey: "AIzaSyCZK0bKgBqfVlcMXq3_vo5x42-QQZPqbVo",
-    authDomain: "todo-list-chat-bot.firebaseapp.com",
-    projectId: "todo-list-chat-bot",
-    storageBucket: "todo-list-chat-bot.appspot.com",
-    messagingSenderId: "701330320999",
-    appId: "1:701330320999:web:08d8df41178a1f0ae12ec2"
-};
+// The firebaseConfig is now imported from firebase-config.js
 
 // --- 2. Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
@@ -26,21 +21,38 @@ const getUserData = async (userId) => {
 
 // --- 3. Common UI Functions (from common.js) ---
 
-async function loadCommonUI() {
+async function loadCommonUI(auth) {
     try {
-        const [topbar, sidebar] = await Promise.all([
+        // Load common UI components
+        const [topbar, sidebar, chatbot] = await Promise.all([
             fetch('topbar.html').then(res => res.text()),
-            fetch('sidebar.html').then(res => res.text())
+            fetch('sidebar.html').then(res => res.text()),
+            fetch('chatbot.html').then(res => res.text())
         ]);
 
         document.querySelector('.topbar').innerHTML = topbar;
         document.querySelector('.sidebar').innerHTML = sidebar;
+
+        // Inject chatbot HTML into the body
+        const chatbotContainer = document.createElement('div');
+        chatbotContainer.innerHTML = chatbot;
+        document.body.appendChild(chatbotContainer);
+
+        // Load chatbot CSS
+        const chatbotCSS = document.createElement('link');
+        chatbotCSS.rel = 'stylesheet';
+        chatbotCSS.href = 'css/chatbot.css';
+        document.head.appendChild(chatbotCSS);
 
         const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
         const activeLink = document.querySelector(`.nav-link[data-page="${currentPage}"]`);
         if (activeLink) {
             activeLink.classList.add('active');
         }
+
+        // Initialize the chatbot logic now that the UI is in place
+        initializeChatbot(auth);
+
     } catch (error) {
         console.error("Error loading common UI fragments: ", error);
     }
@@ -138,7 +150,7 @@ async function main() {
             } else {
                 // User is on a protected page, proceed with loading data
                 currentUserId = user.uid;
-                await loadCommonUI(); // Load UI elements needed for authenticated pages
+                await loadCommonUI(auth); // Load UI elements, including chatbot
                 updateUserInfo(user);
                 initializeAuthActions(auth);
 
