@@ -58,6 +58,7 @@ async function loadCommonUI(auth) {
     }
 }
 
+
 // --- Login Functions ---
 function handleLogin() {
     const loginForm = document.getElementById('login-form');
@@ -69,7 +70,7 @@ function handleLogin() {
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                window.location.href = 'dashboard-new.html';
+                // The onAuthStateChanged listener will handle the redirect.
             } catch (error) {
                 console.error('Login failed:', error);
                 alert(`Login failed: ${error.message}`);
@@ -83,7 +84,7 @@ function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
                 await signInWithPopup(auth, provider);
-                window.location.href = 'dashboard-new.html';
+                // The onAuthStateChanged listener will handle the redirect.
             } catch (error) {
                 console.error('Google sign-in failed:', error);
                 alert(`Google sign-in failed: ${error.message}`);
@@ -138,23 +139,23 @@ let folderCache = {};
 document.addEventListener('DOMContentLoaded', main);
 
 async function main() {
-    const isLoginPage = !!document.getElementById('login-form');
-    const isProtectedPage = !isLoginPage;
-
     onAuthStateChanged(auth, async (user) => {
+        const isLoginPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/');
+        const isProtectedPage = !isLoginPage;
+
         if (user) {
             // User is logged in
             if (isLoginPage) {
-                // If a logged-in user is on the login page, redirect to the dashboard
+                // If a user is logged in and on the login page, redirect them to the dashboard.
                 window.location.href = 'dashboard-new.html';
             } else {
-                // User is on a protected page, proceed with loading data
+                // User is on a protected page, so we load the necessary data and UI.
                 currentUserId = user.uid;
-                await loadCommonUI(auth); // Load UI elements, including chatbot
+                await loadCommonUI(auth);
                 updateUserInfo(user);
                 initializeAuthActions(auth);
 
-                // Page-specific data loading
+                // Example of page-specific logic
                 if (window.location.pathname.includes('completed.html')) {
                     loadInitialData();
                     setupEventListeners();
@@ -163,19 +164,14 @@ async function main() {
         } else {
             // No user is logged in
             if (isProtectedPage) {
-                // If a logged-out user tries to access a protected page, redirect to login
+                // If a logged-out user tries to access a protected page, send them to the login page.
                 window.location.href = 'index.html';
             } else {
-                // User is on the login page, initialize login handlers
+                // User is on the login page, so we initialize the login form handlers.
                 handleLogin();
             }
         }
     });
-
-    // For pages that don't require auth but need common UI
-    if (!isProtectedPage) {
-         // No common UI needed on login page based on its structure
-    }
 }
 
 // Data Fetching and Rendering
